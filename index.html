@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syncrow - Earn Money</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <div class="profile-header">
+            <div class="avatar-area">
+                <img id="user-avatar" src="https://via.placeholder.com/80" alt="Profile">
+                <h3 id="user-name">Loading...</h3>
+                <p id="user-handle">@username</p>
+            </div>
+            <div class="stats-row">
+                <div class="stat-box">
+                    <span>Points</span>
+                    <h2 id="user-points">0</h2>
+                </div>
+                <div class="stat-box">
+                    <span>USDT Balance</span>
+                    <h2 id="user-usdt">$0.00</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('tasks')">Tasks</button>
+            <button class="tab-btn" onclick="switchTab('wallet')">Wallet</button>
+            <button class="tab-btn" onclick="switchTab('profile')">Profile</button>
+        </div>
+
+        <div id="tasks-tab" class="tab-content active">
+            <h4 class="section-title">Available Tasks</h4>
+            <div id="tasks-container"></div>
+        </div>
+
+        <div id="wallet-tab" class="tab-content">
+            <h4 class="section-title">Withdraw Funds</h4>
+            <div class="rate-info">Rate: 1000 pts = 1 USDT</div>
+            <input type="number" id="convert-points" placeholder="Amount of points">
+            <button class="action-btn" onclick="convertPoints()">Convert to USDT</button>
+            
+            <div class="withdraw-section" style="margin-top: 25px;">
+                <input type="number" id="withdraw-usdt" placeholder="Amount in USDT">
+                <input type="text" id="wallet-address" placeholder="BEP20 Wallet Address (0x...)">
+                <button class="action-btn withdraw" onclick="submitWithdraw()">Request Withdrawal</button>
+            </div>
+        </div>
+
+        <div id="profile-tab" class="tab-content">
+            <h4 class="section-title">Task Statistics</h4>
+            <div class="stats-grid">
+                <div class="grid-box approved"><h3>0</h3><p>Approved</p></div>
+                <div class="grid-box pending"><h3>0</h3><p>Pending</p></div>
+                <div class="grid-box rejected"><h3>0</h3><p>Rejected</p></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="task-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h3 id="modal-task-title">Task Title</h3>
+            <span class="badge" id="modal-task-reward">+0 pts</span>
+            <p id="modal-task-desc" style="color: #aaa; font-size: 14px; margin-top: 10px;">Complete steps and submit proof.</p>
+            <button class="action-btn" id="modal-task-link" onclick="">Open Link</button>
+            
+            <div class="proof-upload-area">
+                <h4>Submit Proof</h4>
+                <input type="text" id="proof-text" placeholder="Enter Account Name / Details">
+                <div class="file-dropzone" onclick="document.getElementById('proof-file').click()">
+                    <p id="file-status">Tap to upload screenshot</p>
+                    <input type="file" id="proof-file" style="display:none;" onchange="handleFileSelected()">
+                </div>
+                <button class="action-btn submit-proof" onclick="submitTaskProof()">Submit for Review</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Your Custom Firebase Config
+        const firebaseConfig = {
+          apiKey: "AIzaSyAbdhyQURS3MeQzbWWAHFlvBaOdtBUcGeY",
+          authDomain: "earn-money-29bc4.firebaseapp.com",
+          projectId: "earn-money-29bc4",
+          storageBucket: "earn-money-29bc4.firebasestorage.app",
+          messagingSenderId: "485544910382",
+          appId: "1:485544910382:web:3d9b1a2c51799884de49bf"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const userId = tg.initDataUnsafe?.user?.id || "test_user_pc";
+        const fullName = tg.initDataUnsafe?.user?.first_name || "Developer Mode";
+        const userHandle = tg.initDataUnsafe?.user?.username || "no_handle";
+
+        document.getElementById('user-name').innerText = fullName;
+        document.getElementById('user-handle').innerText = "@" + userHandle;
+
+        let currentUserDoc = db.collection("users").doc(String(userId));
+        let activeTaskId = "";
+
+        currentUserDoc.onSnapshot((doc) => {
+            if (!doc.exists) {
+                currentUserDoc.set({ name: fullName, username: userHandle, points: 0, usdt: 0, completed: [] });
+            } else {
+                let data = doc.data();
+                document.getElementById('user-points').innerText = data.points;
+                document.getElementById('user-usdt').innerText = "$" + (data.usdt || 0).toFixed(2);
+            }
+        });
+
+        db.collection("tasks").onSnapshot(snapshot => {
+            let container = document.getElementById('tasks-container');
+            container.innerHTML = "";
+            snapshot.forEach(doc => {
+                let task = doc.data();
+                container.innerHTML += `
+                    <div class="task-row" onclick="openTaskModal('${doc.id}', '${task.title}', ${task.reward}, '${task.link}')">
+                        <div class="task-info">
+                            <h4>${task.title}</h4>
+                            <p>Earn Rewards</p>
+                        </div>
+                        <span class="pts-badge">${task.reward} pts</span>
+                    </div>
+                `;
+            });
+        });
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function openTaskModal(id, title, reward, link) {
+            activeTaskId = id;
+            document.getElementById('modal-task-title').innerText = title;
+            document.getElementById('modal-task-reward').innerText = `+${reward} pts`;
+            document.getElementById('modal-task-link').onclick = () => window.open(link, '_blank');
+            document.getElementById('task-modal').style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById('task-modal').style.display = "none";
+            document.getElementById('proof-text').value = "";
+            document.getElementById('file-status').innerText = "Tap to upload screenshot";
+        }
+
+        function handleFileSelected() {
+            document.getElementById('file-status').innerText = "Screenshot added!";
+        }
+
+        function submitTaskProof() {
+            let details = document.getElementById('proof-text').value;
+            if(!details) return alert("Please enter proof details!");
+
+            db.collection("submissions").add({
+                userId: userId,
+                userName: fullName,
+                taskId: activeTaskId,
+                taskTitle: document.getElementById('modal-task-title').innerText,
+                details: details,
+                status: "Pending",
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                alert("Proof submitted successfully!");
+                closeModal();
+            });
+        }
+
+        function convertPoints() {
+            let pts = parseInt(document.getElementById('convert-points').value);
+            if(pts >= 1000) {
+                currentUserDoc.get().then(doc => {
+                    if(doc.data().points >= pts) {
+                        let gainUsdt = pts / 1000;
+                        currentUserDoc.update({
+                            points: firebase.firestore.FieldValue.increment(-pts),
+                            usdt: firebase.firestore.FieldValue.increment(gainUsdt)
+                        });
+                        alert("Points successfully converted to USDT!");
+                    } else alert("Insufficient points!");
+                });
+            } else alert("Minimum conversion is 1000 points.");
+        }
+    </script>
+</body>
+</html>

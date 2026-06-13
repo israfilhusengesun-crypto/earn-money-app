@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Syncrow Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body style="background: #111;">
+    <div class="app-container">
+        <h2>Syncrow Admin Control</h2>
+        
+        <div class="panel-section" style="background:#1c1c24; padding:20px; border-radius:12px; margin-bottom:20px;">
+            <h3>Create New Task</h3>
+            <input type="text" id="adm-task-title" placeholder="Task Title (e.g. Subscribe Channel)">
+            <input type="number" id="adm-task-reward" placeholder="Reward Points">
+            <input type="text" id="adm-task-link" placeholder="Task Link URL">
+            <button class="action-btn" onclick="publishTask()">Publish Task</button>
+        </div>
+
+        <h3>Pending Task Proofs</h3>
+        <div id="admin-proofs-container"></div>
+    </div>
+
+    <script>
+        // Your Custom Firebase Config
+        const firebaseConfig = {
+          apiKey: "AIzaSyAbdhyQURS3MeQzbWWAHFlvBaOdtBUcGeY",
+          authDomain: "earn-money-29bc4.firebaseapp.com",
+          projectId: "earn-money-29bc4",
+          storageBucket: "earn-money-29bc4.firebasestorage.app",
+          messagingSenderId: "485544910382",
+          appId: "1:485544910382:web:3d9b1a2c51799884de49bf"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        function publishTask() {
+            let title = document.getElementById('adm-task-title').value;
+            let reward = parseInt(document.getElementById('adm-task-reward').value);
+            let link = document.getElementById('adm-task-link').value;
+
+            if(!title || !reward || !link) return alert("Fill all fields!");
+
+            db.collection("tasks").add({ title, reward, link })
+            .then(() => {
+                alert("Task active now!");
+                location.reload();
+            });
+        }
+
+        db.collection("submissions").where("status", "==", "Pending").onSnapshot(snapshot => {
+            let container = document.getElementById('admin-proofs-container');
+            container.innerHTML = "";
+            snapshot.forEach(doc => {
+                let data = doc.data();
+                container.innerHTML += `
+                    <div class="task-row" style="background:#1c1c24; display:block; padding:15px; margin-bottom:10px;">
+                        <h4>User: ${data.userName}</h4>
+                        <p style="color:#0088cc;">Task: ${data.taskTitle}</p>
+                        <p style="color:#fff; margin:5px 0;">Proof Details: "${data.details}"</p>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button class="action-btn" style="background:#2ecc71;" onclick="reviewProof('${doc.id}', 'Approved', '${data.userId}', '${data.taskId}')">Approve</button>
+                            <button class="action-btn" style="background:#e74c3c;" onclick="reviewProof('${doc.id}', 'Rejected', '${data.userId}', '${data.taskId}')">Reject</button>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+
+        function reviewProof(subId, status, userId, taskId) {
+            db.collection("submissions").doc(subId).update({ status: status })
+            .then(() => {
+                if(status === "Approved") {
+                    db.collection("tasks").doc(taskId).get().then(taskDoc => {
+                        let reward = taskDoc.data().reward;
+                        db.collection("users").doc(userId).update({
+                            points: firebase.firestore.FieldValue.increment(reward),
+                            completed: firebase.firestore.FieldValue.arrayUnion(taskId)
+                        });
+                    });
+                }
+                alert(`Proof ${status}!`);
+            });
+        }
+    </script>
+</body>
+</html>
