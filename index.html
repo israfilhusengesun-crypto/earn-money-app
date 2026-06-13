@@ -3,62 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Syncrow - Earn Money</title>
+    <title>Syncrow Premium App</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
+    <div class="top-nav">
+        <div class="brand">
+            <span class="logo-dot"></span>
+            <h3>Syncrow</h3>
+        </div>
+        <div id="admin-indicator" class="admin-badge" style="display: none;">Admin Mode</div>
+    </div>
+
     <div class="app-container">
-        <div class="profile-header">
-            <div class="avatar-area">
-                <img id="user-avatar" src="https://via.placeholder.com/80" alt="Profile">
-                <h3 id="user-name">Loading...</h3>
-                <p id="user-handle">@username</p>
-            </div>
-            <div class="stats-row">
-                <div class="stat-box">
-                    <span>Points</span>
-                    <h2 id="user-points">0</h2>
+        <div id="user-view">
+            <div class="user-card">
+                <div class="profile-details">
+                    <img id="user-avatar" src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=150" alt="Avatar">
+                    <div class="profile-text">
+                        <h2 id="user-name">Loading User...</h2>
+                        <p id="user-handle">@username</p>
+                        <p id="user-tgid" class="tg-id-text">ID: 0000000000</p>
+                    </div>
                 </div>
-                <div class="stat-box">
-                    <span>USDT Balance</span>
-                    <h2 id="user-usdt">$0.00</h2>
+                
+                <div class="balance-grid">
+                    <div class="balance-box">
+                        <p>Total Points</p>
+                        <h3 id="user-points">0</h3>
+                    </div>
+                    <div class="balance-box">
+                        <p>USDT Balance</p>
+                        <h3 id="user-usdt">$0.00</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="switchTab('tasks')">Tasks</button>
+                <button class="tab-btn" onclick="switchTab('wallet')">Wallet</button>
+                <button class="tab-btn" onclick="switchTab('admin', true)">Admin Control</button>
+            </div>
+
+            <div id="tasks-tab" class="tab-content active">
+                <h4 class="section-title">Available Missions</h4>
+                <div id="tasks-container"></div>
+            </div>
+
+            <div id="wallet-tab" class="tab-content">
+                <h4 class="section-title">Financial Gateway</h4>
+                <div class="wallet-card">
+                    <div class="rate-bar">Rate: 1000 Points = 1.00 USDT</div>
+                    <div class="input-group">
+                        <input type="number" id="convert-points" placeholder="Enter points to convert">
+                        <button class="action-btn-primary" onclick="convertPoints()">Convert Points</button>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="input-group" style="margin-top: 15px;">
+                        <input type="number" id="withdraw-usdt" placeholder="Amount in USDT">
+                        <input type="text" id="wallet-address" placeholder="BEP20 Address (0x...)">
+                        <button class="action-btn-withdraw" onclick="submitWithdraw()">Request Payout</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="nav-tabs">
-            <button class="tab-btn active" onclick="switchTab('tasks')">Tasks</button>
-            <button class="tab-btn" onclick="switchTab('wallet')">Wallet</button>
-            <button class="tab-btn" onclick="switchTab('profile')">Profile</button>
-        </div>
-
-        <div id="tasks-tab" class="tab-content active">
-            <h4 class="section-title">Available Tasks</h4>
-            <div id="tasks-container"></div>
-        </div>
-
-        <div id="wallet-tab" class="tab-content">
-            <h4 class="section-title">Withdraw Funds</h4>
-            <div class="rate-info">Rate: 1000 pts = 1 USDT</div>
-            <input type="number" id="convert-points" placeholder="Amount of points">
-            <button class="action-btn" onclick="convertPoints()">Convert to USDT</button>
-            
-            <div class="withdraw-section" style="margin-top: 25px;">
-                <input type="number" id="withdraw-usdt" placeholder="Amount in USDT">
-                <input type="text" id="wallet-address" placeholder="BEP20 Wallet Address (0x...)">
-                <button class="action-btn withdraw" onclick="submitWithdraw()">Request Withdrawal</button>
+        <div id="admin-tab" class="tab-content">
+            <div id="admin-lock-screen" class="lock-screen">
+                <div class="lock-icon">🔒</div>
+                <h3>Access Denied</h3>
+                <p>This panel is encrypted and restricted to the system owner only.</p>
             </div>
-        </div>
 
-        <div id="profile-tab" class="tab-content">
-            <h4 class="section-title">Task Statistics</h4>
-            <div class="stats-grid">
-                <div class="grid-box approved"><h3>0</h3><p>Approved</p></div>
-                <div class="grid-box pending"><h3>0</h3><p>Pending</p></div>
-                <div class="grid-box rejected"><h3>0</h3><p>Rejected</p></div>
+            <div id="admin-allowed-content" style="display: none;">
+                <div class="admin-card">
+                    <h4>Create New Mission</h4>
+                    <input type="text" id="adm-task-title" placeholder="Mission Title (e.g. Subscribe Channel)">
+                    <input type="number" id="adm-task-reward" placeholder="Reward Points amount">
+                    <input type="text" id="adm-task-link" placeholder="Target Link URL">
+                    <button class="action-btn-primary" onclick="publishTask()">Launch Mission</button>
+                </div>
+
+                <h4 class="section-title" style="margin-top: 25px;">Submissions Awaiting Approval</h4>
+                <div id="admin-proofs-container"></div>
             </div>
         </div>
     </div>
@@ -66,19 +96,20 @@
     <div id="task-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal()">&times;</span>
-            <h3 id="modal-task-title">Task Title</h3>
-            <span class="badge" id="modal-task-reward">+0 pts</span>
-            <p id="modal-task-desc" style="color: #aaa; font-size: 14px; margin-top: 10px;">Complete steps and submit proof.</p>
-            <button class="action-btn" id="modal-task-link" onclick="">Open Link</button>
+            <span class="modal-badge" id="modal-task-reward">+0 pts</span>
+            <h3 id="modal-task-title">Mission Title</h3>
+            <p class="modal-hint">Complete the requirement using the link below, then submit verifiable proof.</p>
             
-            <div class="proof-upload-area">
-                <h4>Submit Proof</h4>
-                <input type="text" id="proof-text" placeholder="Enter Account Name / Details">
-                <div class="file-dropzone" onclick="document.getElementById('proof-file').click()">
-                    <p id="file-status">Tap to upload screenshot</p>
+            <button class="action-btn-primary launch-link" id="modal-task-link" onclick="">Go to Target Link</button>
+            
+            <div class="proof-form">
+                <h4>Required Evidence</h4>
+                <input type="text" id="proof-text" placeholder="Your Telegram handle or Account Name">
+                <div class="upload-box" onclick="document.getElementById('proof-file').click()">
+                    <p id="file-status">📷 Attach Verification Screenshot</p>
                     <input type="file" id="proof-file" style="display:none;" onchange="handleFileSelected()">
                 </div>
-                <button class="action-btn submit-proof" onclick="submitTaskProof()">Submit for Review</button>
+                <button class="action-btn-primary submit-btn" onclick="submitTaskProof()">Submit Proof for Review</button>
             </div>
         </div>
     </div>
@@ -96,15 +127,27 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
+        // Secure Admin Matching Config
+        const MASTER_ADMIN_ID = "5769465864"; 
+
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const userId = tg.initDataUnsafe?.user?.id || "test_user_pc";
-        const fullName = tg.initDataUnsafe?.user?.first_name || "Developer Mode";
+        const userId = tg.initDataUnsafe?.user?.id || "5769465864"; // Defaulting to your ID for testing on PC
+        const fullName = tg.initDataUnsafe?.user?.first_name || "Developer Account";
         const userHandle = tg.initDataUnsafe?.user?.username || "no_handle";
 
         document.getElementById('user-name').innerText = fullName;
         document.getElementById('user-handle').innerText = "@" + userHandle;
+        document.getElementById('user-tgid').innerText = "ID: " + userId;
+
+        // Security Validation Check
+        const isAdmin = (String(userId) === MASTER_ADMIN_ID);
+        if (isAdmin) {
+            document.getElementById('admin-indicator').style.display = "block";
+            document.getElementById('admin-lock-screen').style.display = "none";
+            document.getElementById('admin-allowed-content').style.display = "block";
+        }
 
         let currentUserDoc = db.collection("users").doc(String(userId));
         let activeTaskId = "";
@@ -125,18 +168,18 @@
             snapshot.forEach(doc => {
                 let task = doc.data();
                 container.innerHTML += `
-                    <div class="task-row" onclick="openTaskModal('${doc.id}', '${task.title}', ${task.reward}, '${task.link}')">
-                        <div class="task-info">
+                    <div class="task-card-row" onclick="openTaskModal('${doc.id}', '${task.title}', ${task.reward}, '${task.link}')">
+                        <div class="task-main-info">
                             <h4>${task.title}</h4>
-                            <p>Earn Rewards</p>
+                            <p>Verification Check Active</p>
                         </div>
-                        <span class="pts-badge">${task.reward} pts</span>
+                        <span class="pts-pill">+${task.reward} PTS</span>
                     </div>
                 `;
             });
         });
 
-        function switchTab(tabName) {
+        function switchTab(tabName, isAdminTab = false) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(`${tabName}-tab`).classList.add('active');
@@ -146,7 +189,7 @@
         function openTaskModal(id, title, reward, link) {
             activeTaskId = id;
             document.getElementById('modal-task-title').innerText = title;
-            document.getElementById('modal-task-reward').innerText = `+${reward} pts`;
+            document.getElementById('modal-task-reward').innerText = `+${reward} PTS`;
             document.getElementById('modal-task-link').onclick = () => window.open(link, '_blank');
             document.getElementById('task-modal').style.display = "block";
         }
@@ -154,16 +197,16 @@
         function closeModal() {
             document.getElementById('task-modal').style.display = "none";
             document.getElementById('proof-text').value = "";
-            document.getElementById('file-status').innerText = "Tap to upload screenshot";
+            document.getElementById('file-status').innerText = "📷 Attach Verification Screenshot";
         }
 
         function handleFileSelected() {
-            document.getElementById('file-status').innerText = "Screenshot added!";
+            document.getElementById('file-status').innerText = "✓ Screenshot Loaded Successfully";
         }
 
         function submitTaskProof() {
             let details = document.getElementById('proof-text').value;
-            if(!details) return alert("Please enter proof details!");
+            if(!details) return alert("Please type your proof details first!");
 
             db.collection("submissions").add({
                 userId: userId,
@@ -174,7 +217,7 @@
                 status: "Pending",
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
-                alert("Proof submitted successfully!");
+                alert("Proof delivered to Admin dashboard successfully!");
                 closeModal();
             });
         }
@@ -189,10 +232,66 @@
                             points: firebase.firestore.FieldValue.increment(-pts),
                             usdt: firebase.firestore.FieldValue.increment(gainUsdt)
                         });
-                        alert("Points successfully converted to USDT!");
-                    } else alert("Insufficient points!");
+                        alert("Points successfully swapped to USDT asset!");
+                    } else alert("Insufficient point balance!");
                 });
-            } else alert("Minimum conversion is 1000 points.");
+            } else alert("Minimum exchange threshold is 1000 points.");
+        }
+
+        // Live Admin Systems Dashboard Engine
+        if (isAdmin) {
+            db.collection("submissions").where("status", "==", "Pending").onSnapshot(snapshot => {
+                let container = document.getElementById('admin-proofs-container');
+                container.innerHTML = "";
+                snapshot.forEach(doc => {
+                    let data = doc.data();
+                    container.innerHTML += `
+                        <div class="admin-review-box">
+                            <div class="review-meta">
+                                <h5>User Account: ${data.userName}</h5>
+                                <p class="target-mission">Mission: ${data.taskTitle}</p>
+                                <p class="proof-string">User Proof: "${data.details}"</p>
+                            </div>
+                            <div class="review-actions">
+                                <button class="btn-approve" onclick="reviewProof('${doc.id}', 'Approved', '${data.userId}', '${data.taskId}')">Approve Reward</button>
+                                <button class="btn-reject" onclick="reviewProof('${doc.id}', 'Rejected', '${data.userId}', '${data.taskId}')">Reject Submission</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        function publishTask() {
+            let title = document.getElementById('adm-task-title').value;
+            let reward = parseInt(document.getElementById('adm-task-reward').value);
+            let link = document.getElementById('adm-task-link').value;
+
+            if(!title || !reward || !link) return alert("All generation parameters required!");
+
+            db.collection("tasks").add({ title, reward, link })
+            .then(() => {
+                alert("New ecosystem task published successfully!");
+                document.getElementById('adm-task-title').value = '';
+                document.getElementById('adm-task-reward').value = '';
+                document.getElementById('adm-task-link').value = '';
+            });
+        }
+
+        function reviewProof(subId, status, targetUserId, targetTaskId) {
+            db.collection("submissions").doc(subId).update({ status: status })
+            .then(() => {
+                if(status === "Approved") {
+                    db.collection("tasks").doc(targetTaskId).get().then(taskDoc => {
+                        let reward = taskDoc.data().reward;
+                        db.collection("users").doc(targetUserId).update({
+                            points: firebase.firestore.FieldValue.increment(reward),
+                            completed: firebase.firestore.FieldValue.arrayUnion(targetTaskId)
+                        });
+                    });
+                }
+                alert(`Submission marked as ${status}!`);
+            });
         }
     </script>
 </body>
