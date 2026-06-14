@@ -30,9 +30,8 @@ if (user && user.id) {
     fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || "Telegram User";
     userHandle = user.username ? "@" + user.username : "@" + fullName.toLowerCase().replace(/\s+/g, '') + "_user";
 } else {
-    // সাধারণ ব্রাউজার ভিউ বা টেস্ট মোড
     userId = "8041708413"; 
-    fullName = "টেলিগ্রাম লিংক ভিউ";
+    fullName = "টেলিগ্রাম লিংক View";
     userHandle = "@open_via_bot_link";
 }
 
@@ -41,41 +40,33 @@ document.getElementById('user-name').innerText = fullName;
 document.getElementById('user-handle').innerText = userHandle;
 document.getElementById('user-tgid').innerText = "ID: " + userId;
 
-// 🖼️ টেলিগ্রাম সার্ভার থেকে আসল প্রোফাইল পিকচার এবং ইউজারনেম ফেচ করার অ্যাডভান্সড লজিক
+// 🖼️ টেলিগ্রাম সার্ভার থেকে আসল প্রোফাইল পিকচার ফেচ এবং প্রক্সি বাইপাস লজিক
 async function fetchTelegramUserProfile() {
     try {
-        // ১. টেলিগ্রামের অফিসিয়াল getUserProfilePhotos API কল
         const photoRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUserProfilePhotos?user_id=${userId}&limit=1`);
         const photoData = await photoRes.json();
 
         if (photoData.ok && photoData.result.total_count > 0) {
-            // ইউজারের লেটেস্ট প্রোফাইল ছবির File ID নেওয়া
             const fileId = photoData.result.photos[0][0].file_id;
             
-            // ২. File ID দিয়ে ফাইলের আসল পাথ (Path) বের করা
             const fileRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
             const fileData = await fileRes.json();
 
             if (fileData.ok) {
                 const filePath = fileData.result.file_path;
-                // ৩. ফাইনাল ডাউনলোড লিংক তৈরি করে প্রোফাইল ইমেজে সেট করা
-                const finalPhotoUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
-                document.getElementById('user-avatar').src = finalPhotoUrl;
+                const rawPhotoUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
+                
+                // 🚀 CORS এবং সিকিউরিটি ব্লক এড়ানোর জন্য ওপেন প্রক্সি গেটওয়ে ব্যবহার
+                const bypassedPhotoUrl = `https://images.weserv.nl/?url=${encodeURIComponent(rawPhotoUrl)}`;
+                
+                document.getElementById('user-avatar').src = bypassedPhotoUrl;
             }
         } else {
-            // যদি টেলিগ্রামে কোনো ছবি আপলোড করা না থাকে, তবে স্ট্যান্ডার্ড ব্যাকআপ অবতার শো করবে
+            // প্রোফাইল পিকচার না থাকলে নামের প্রথম অক্ষরের সুন্দর অবতার
             document.getElementById('user-avatar').src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fullName)}&backgroundColor=0ea5e9`;
-        }
-
-        // ৪. ইউজারনেম ডাটা ডাইনামিকালি রি-ভেরিফাই করা
-        const chatRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChat?chat_id=${userId}`);
-        const chatData = await chatRes.json();
-        if (chatData.ok && chatData.result.username) {
-            document.getElementById('user-handle').innerText = "@" + chatData.result.username;
         }
     } catch (error) {
         console.log("Telegram API Error:", error);
-        // নেটওয়ার্ক এরর হলে ব্যাকআপ ইমেজ সেট থাকবে
         document.getElementById('user-avatar').src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fullName)}&backgroundColor=0ea5e9`;
     }
 }
