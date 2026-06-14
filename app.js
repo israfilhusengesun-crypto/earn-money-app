@@ -1,4 +1,3 @@
-// আপনার ফায়ারবেস কনফিগ ডাটাসমূহ
 const firebaseConfig = {
   apiKey: "AIzaSyAbdhyQURS3MeQzbWWAHFlvBaOdtBUcGeY",
   authDomain: "earn-money-29bc4.firebaseapp.com",
@@ -14,26 +13,45 @@ const db = firebase.firestore();
 const MASTER_ADMIN_ID = "5769465864"; 
 
 const tg = window.Telegram.WebApp;
+tg.ready(); // টেলিগ্রাম অ্যাপকে রেডি সিগন্যাল পাঠানো
 tg.expand();
 
-const userId = tg.initDataUnsafe?.user?.id || "5769465864"; 
-const fullName = tg.initDataUnsafe?.user?.first_name || "Israfil Bhai";
-const userHandle = tg.initDataUnsafe?.user?.username || "israfil_crypto";
+// টেলিগ্রাম রিয়েল ডাটা এক্সট্রাকশন
+const user = tg.initDataUnsafe?.user;
+let userId = "";
+let fullName = "";
+let userHandle = "";
+
+if (user && user.id) {
+    // বটের ভেতর থেকে ঢুকলে আসল ডাটা লোড হবে
+    userId = String(user.id);
+    fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || "Telegram User";
+    userHandle = user.username ? "@" + user.username : "@no_username";
+    
+    // ইউজারের নামের প্রথম অক্ষর দিয়ে সুন্দর অবতার তৈরি
+    document.getElementById('user-avatar').src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fullName)}&backgroundColor=0ea5e9`;
+} else {
+    // কোড আপডেট হয়েছে কিনা তা ধরার জন্য এই টেস্ট ডাটাটি দেখতে পাবেন
+    userId = "8041708413"; 
+    fullName = "টেলিগ্রাম লিংক ভিউ";
+    userHandle = "@open_via_bot_link";
+    document.getElementById('user-avatar').src = "https://api.dicebear.com/7.x/initials/svg?seed=Syncrow&backgroundColor=334155";
+}
 
 document.getElementById('user-name').innerText = fullName;
-document.getElementById('user-handle').innerText = "@" + userHandle;
+document.getElementById('user-handle').innerText = userHandle;
 document.getElementById('user-tgid').innerText = "ID: " + userId;
 
 // 🛡️ অ্যাডমিন সিকিউরিটি ও বাটন ভিজিবিলিটি লক
 const isAdmin = (String(userId) === MASTER_ADMIN_ID);
 if (isAdmin) {
     document.getElementById('admin-indicator').style.display = "block";
-    document.getElementById('admin-nav-btn').style.display = "flex"; // নিচের বারে অ্যাডমিন বাটন অন হবে
+    document.getElementById('admin-nav-btn').style.display = "flex";
     document.getElementById('admin-lock-screen').style.display = "none";
     document.getElementById('admin-allowed-content').style.display = "block";
 }
 
-let currentUserDoc = db.collection("users").doc(String(userId));
+let currentUserDoc = db.collection("users").doc(userId);
 let activeTaskId = "";
 
 currentUserDoc.onSnapshot((doc) => {
@@ -64,18 +82,12 @@ db.collection("tasks").onSnapshot(snapshot => {
     });
 });
 
-// 📱 নতুন বটম ট্যাব সুইচিং ফাংশন
 function switchTab(tabName) {
-    // সব কনটেন্ট হাইড করা
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    // সব বাটন ইনঅ্যাক্টিভ করা
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    
-    // নির্দিষ্ট ট্যাব এবং বাটন অ্যাক্টিভ করা
     document.getElementById(`${tabName}-tab`).classList.add('active');
     
-    // ক্লিকের ওপর ভিত্তি করে মেনু আইটেম হাইলাইট করা
-    const eventTarget = event.currentTarget;
+    const eventTarget = window.event?.currentTarget;
     if (eventTarget && eventTarget.classList.contains('nav-item')) {
         eventTarget.classList.add('active');
     }
@@ -127,13 +139,12 @@ function convertPoints() {
                     points: firebase.firestore.FieldValue.increment(-pts),
                     usdt: firebase.firestore.FieldValue.increment(gainUsdt)
                 });
-                alert("پয়েন্ট সফলভাবে ডলারে (USDT) কনভার্ট হয়েছে!");
+                alert("পয়েন্ট সফলভাবে ডলারে (USDT) কনভার্ট হয়েছে!");
             } else alert("আপনার ব্যালেন্সে পর্যাপ্ত পয়েন্ট নেই!");
         });
     } else alert("সর্বনিম্ন ১০০০ পয়েন্ট কনভার্ট করতে পারবেন।");
 }
 
-// 🛡️ অ্যাডমিন রিভিউ ডাটা প্রসেস ইঞ্জিন
 if (isAdmin) {
     db.collection("submissions").where("status", "==", "Pending").onSnapshot(snapshot => {
         let container = document.getElementById('admin-proofs-container');
