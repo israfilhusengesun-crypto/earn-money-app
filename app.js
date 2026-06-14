@@ -13,34 +13,75 @@ const db = firebase.firestore();
 const MASTER_ADMIN_ID = "5769465864"; 
 
 const tg = window.Telegram.WebApp;
-tg.ready(); // টেলিগ্রাম অ্যাপকে রেডি সিগন্যাল পাঠানো
+tg.ready();
 tg.expand();
 
-// টেলিগ্রাম রিয়েল ডাটা এক্সট্রাকশন
-const user = tg.initDataUnsafe?.user;
+// বটের টোকেন (টেলিগ্রাম সার্ভার থেকে ছবি ও ডাটা টানার জন্য ব্রিজ)
+const BOT_TOKEN = "7442188411:AAH80W7LomXbVbM_m8wHclhT0G8N-tJ46wU"; 
+
 let userId = "";
 let fullName = "";
 let userHandle = "";
 
+const user = tg.initDataUnsafe?.user;
+
 if (user && user.id) {
-    // বটের ভেতর থেকে ঢুকলে আসল ডাটা লোড হবে
     userId = String(user.id);
     fullName = [user.first_name, user.last_name].filter(Boolean).join(" ") || "Telegram User";
-    userHandle = user.username ? "@" + user.username : "@no_username";
-    
-    // ইউজারের নামের প্রথম অক্ষর দিয়ে সুন্দর অবতার তৈরি
-    document.getElementById('user-avatar').src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fullName)}&backgroundColor=0ea5e9`;
+    userHandle = user.username ? "@" + user.username : "@" + fullName.toLowerCase().replace(/\s+/g, '') + "_user";
 } else {
-    // কোড আপডেট হয়েছে কিনা তা ধরার জন্য এই টেস্ট ডাটাটি দেখতে পাবেন
+    // সাধারণ ব্রাউজার ভিউ বা টেস্ট মোড
     userId = "8041708413"; 
     fullName = "টেলিগ্রাম লিংক ভিউ";
     userHandle = "@open_via_bot_link";
-    document.getElementById('user-avatar').src = "https://api.dicebear.com/7.x/initials/svg?seed=Syncrow&backgroundColor=334155";
 }
 
+// UI-তে নাম এবং আইডি ইনস্ট্যান্ট সেট করা
 document.getElementById('user-name').innerText = fullName;
 document.getElementById('user-handle').innerText = userHandle;
 document.getElementById('user-tgid').innerText = "ID: " + userId;
+
+// 🖼️ টেলিগ্রাম সার্ভার থেকে আসল প্রোফাইল পিকচার এবং ইউজারনেম ফেচ করার অ্যাডভান্সড লজিক
+async function fetchTelegramUserProfile() {
+    try {
+        // ১. টেলিগ্রামের অফিসিয়াল getUserProfilePhotos API কল
+        const photoRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUserProfilePhotos?user_id=${userId}&limit=1`);
+        const photoData = await photoRes.json();
+
+        if (photoData.ok && photoData.result.total_count > 0) {
+            // ইউজারের লেটেস্ট প্রোফাইল ছবির File ID নেওয়া
+            const fileId = photoData.result.photos[0][0].file_id;
+            
+            // ২. File ID দিয়ে ফাইলের আসল পাথ (Path) বের করা
+            const fileRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getFile?file_id=${fileId}`);
+            const fileData = await fileRes.json();
+
+            if (fileData.ok) {
+                const filePath = fileData.result.file_path;
+                // ৩. ফাইনাল ডাউনলোড লিংক তৈরি করে প্রোফাইল ইমেজে সেট করা
+                const finalPhotoUrl = `https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`;
+                document.getElementById('user-avatar').src = finalPhotoUrl;
+            }
+        } else {
+            // যদি টেলিগ্রামে কোনো ছবি আপলোড করা না থাকে, তবে স্ট্যান্ডার্ড ব্যাকআপ অবতার শো করবে
+            document.getElementById('user-avatar').src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fullName)}&backgroundColor=0ea5e9`;
+        }
+
+        // ৪. ইউজারনেম ডাটা ডাইনামিকালি রি-ভেরিফাই করা
+        const chatRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getChat?chat_id=${userId}`);
+        const chatData = await chatRes.json();
+        if (chatData.ok && chatData.result.username) {
+            document.getElementById('user-handle').innerText = "@" + chatData.result.username;
+        }
+    } catch (error) {
+        console.log("Telegram API Error:", error);
+        // নেটওয়ার্ক এরর হলে ব্যাকআপ ইমেজ সেট থাকবে
+        document.getElementById('user-avatar').src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fullName)}&backgroundColor=0ea5e9`;
+    }
+}
+
+// প্রোফাইল ডাটা লোড ফাংশন রান করা
+fetchTelegramUserProfile();
 
 // 🛡️ অ্যাডমিন সিকিউরিটি ও বাটন ভিজিবিলিটি লক
 const isAdmin = (String(userId) === MASTER_ADMIN_ID);
