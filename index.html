@@ -34,12 +34,6 @@
                     <input type="number" id="convert-points" placeholder="কত পয়েন্ট কনভার্ট করবেন?">
                     <button class="action-btn-primary" onclick="convertPoints()">কনভার্ট করুন</button>
                 </div>
-                <div class="divider"></div>
-                <div class="input-group" style="margin-top: 15px;">
-                    <input type="number" id="withdraw-usdt" placeholder="টাকার পরিমাণ (USDT)">
-                    <input type="text" id="wallet-address" placeholder="BEP20 ওয়ালেট অ্যাড্রেস লিখুন">
-                    <button class="action-btn-withdraw" onclick="submitWithdraw()">উইথড্র রিকোয়েস্ট পাঠান</button>
-                </div>
             </div>
         </div>
 
@@ -47,11 +41,12 @@
             <h4 class="section-title">আপনার প্রোফাইল ডিটেইলস</h4>
             <div class="user-card">
                 <div class="profile-details">
-                    <img id="user-avatar" src="https://i.ibb.co/vYgK08w/avatar-placeholder.png" alt="Avatar">
+                    <img id="user-avatar" src="https://api.dicebear.com/7.x/initials/svg?seed=User" alt="Avatar">
                     <div class="profile-text">
                         <h2 id="user-name">Loading Profile...</h2>
                         <p id="user-handle">@username</p>
                         <p id="user-tgid" class="tg-id-text">ID: 0000000000</p>
+                        <p id="user-joined" style="font-size: 11px; color: #888; margin-top: 5px;">Joined: --/--/----</p>
                     </div>
                 </div>
                 
@@ -123,7 +118,7 @@
                     <p id="file-status">📷 প্রুফ স্ক্রিনশট সিলেক্ট করুন</p>
                     <input type="file" id="proof-file" style="display:none;" onchange="handleFileSelected()">
                 </div>
-                <button class="action-btn-primary submit-btn" onclick="submitTaskProof()">প্রমাণ জমা দিন</button>
+                <button class="action-btn-primary submit-btn" id="submit-proof-btn" onclick="submitTaskProof()">প্রমাণ জমা দিন</button>
             </div>
         </div>
     </div>

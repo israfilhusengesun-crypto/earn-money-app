@@ -1,112 +1,346 @@
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background-color: #080c14;
-    color: #e2e8f0;
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+    background-color: #0f172a;
+    color: #f8fafc;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    height: 100vh;
+    overflow: hidden;
 }
+
+/* টপ নেভিগেশন */
 .top-nav {
-    width: 100%;
-    max-width: 480px;
+    background-color: #1e293b;
+    padding: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 16px;
-    box-sizing: border-box;
+    border-bottom: 1px solid #334155;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logo-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #38bdf8;
+    border-radius: 5px;
+}
+
+.admin-badge {
+    background: #059669;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+/* কনটেন্ট এরিয়া */
+.app-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    padding-bottom: 90px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.section-title {
+    font-size: 16px;
+    color: #94a3b8;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+/* টাস্ক কার্ড ডিজাইন */
+.task-card-row {
+    background: #1e293b;
+    border: 1px solid #334155;
+    padding: 15px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.task-card-row:hover {
+    border-color: #475569;
+}
+
+.task-main-info h4 {
+    font-size: 15px;
+    color: #f1f5f9;
+    margin-bottom: 4px;
+}
+
+.task-main-info p {
+    font-size: 11px;
+    color: #22c55e;
+}
+
+.pts-pill {
+    background: rgba(56, 189, 248, 0.1);
+    color: #38bdf8;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+/* প্রোফাইল কার্ড */
+.user-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    padding: 20px;
+    border-radius: 16px;
+}
+
+.profile-details {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+#user-avatar {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    border: 2px solid #38bdf8;
+    object-fit: cover;
+}
+
+.profile-text h2 {
+    font-size: 18px;
+    color: #f8fafc;
+}
+
+.profile-text p {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.tg-id-text {
+    font-size: 11px !important;
+    color: #38bdf8 !important;
+    margin-top: 2px;
+}
+
+.balance-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.balance-box {
     background: #0f172a;
-    border-bottom: 1px solid #1e293b;
-    position: fixed;
-    top: 0;
-    z-index: 99;
-}
-.brand { display: flex; align-items: center; gap: 8px; }
-.brand h3 { margin: 0; font-size: 18px; font-weight: 700; color: #fff; }
-.logo-dot { width: 8px; height: 8px; background: #0ea5e9; border-radius: 50%; box-shadow: 0 0 10px #0ea5e9; }
-.admin-badge { background: rgba(234, 179, 8, 0.1); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.2); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-
-/* স্ক্রোলিং স্পেস ঠিক রাখার জন্য কন্টেইনার */
-.app-container { 
-    width: 100%; 
-    max-width: 480px; 
-    padding: 80px 16px 90px 16px; 
-    box-sizing: border-box; 
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #334155;
 }
 
-.user-card { background: linear-gradient(135deg, #0f172a, #1e293b); border: 1px solid #334155; padding: 20px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
-.profile-details { display: flex; align-items: center; gap: 16px; }
-.profile-details img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #0ea5e9; object-fit: cover; }
-.profile-text h2 { margin: 0; font-size: 18px; color: #fff; font-weight: 600; }
-.profile-text p { margin: 2px 0 0 0; font-size: 13px; color: #94a3b8; }
-.tg-id-text { font-size: 11px !important; color: #64748b !important; margin-top: 4px !important; }
-.balance-grid { display: flex; gap: 12px; margin-top: 20px; border-top: 1px solid #334155; padding-top: 16px; }
-.balance-box { flex: 1; }
-.balance-box p { margin: 0; font-size: 11px; color: #94a3b8; text-transform: uppercase; }
-.balance-box h3 { margin: 4px 0 0 0; font-size: 22px; color: #0ea5e9; font-weight: 700; }
+.balance-box p {
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 5px;
+}
 
-/* 📱 নতুন স্টাইলিশ বটম নেভিগেশন বার */
+.balance-box h3 {
+    font-size: 20px;
+    color: #f1f5f9;
+}
+
+/* ওয়ালেট ও অ্যাডমিন কার্ড */
+.wallet-card, .admin-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    padding: 25px;
+    border-radius: 16px;
+}
+
+.rate-bar {
+    background: rgba(234, 179, 8, 0.1);
+    color: #eab308;
+    padding: 8px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
+input {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid #334155;
+    padding: 12px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    margin-bottom: 12px;
+    outline: none;
+}
+
+input:focus {
+    border-color: #38bdf8;
+}
+
+/* বাটন্স */
+.action-btn-primary {
+    width: 100%;
+    background: #38bdf8;
+    color: #0f172a;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.action-btn-primary:disabled {
+    background: #475569;
+    color: #94a3b8;
+}
+
+/* বটম নেভিগেশন বার */
 .bottom-nav {
     position: fixed;
     bottom: 0;
-    width: 100%;
-    max-width: 480px;
-    background: #0f172a;
-    border-top: 1px solid #1e293b;
+    left: 0;
+    right: 0;
+    background: #1e293b;
+    border-top: 1px solid #334155;
     display: flex;
     justify-content: space-around;
     padding: 10px 0;
     z-index: 100;
 }
+
 .nav-item {
-    background: transparent;
+    background: none;
     border: none;
-    color: #94a3b8;
+    color: #64748b;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
     cursor: pointer;
-    flex: 1;
-    transition: all 0.2s ease;
+    width: 20%;
 }
-.nav-icon { font-size: 20px; }
-.nav-text { font-size: 11px; font-weight: 600; }
-.nav-item.active { color: #0ea5e9; transform: scale(1.05); }
 
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-.section-title { margin: 0 0 14px 0; font-size: 13px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
-.task-card-row { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 16px; border-radius: 16px; margin-bottom: 12px; border: 1px solid #1e293b; cursor: pointer; }
-.task-main-info h4 { margin: 0; font-size: 15px; color: #fff; }
-.task-main-info p { margin: 4px 0 0 0; font-size: 12px; color: #64748b; }
-.pts-pill { background: rgba(14, 165, 233, 0.1); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.2); padding: 6px 14px; border-radius: 50px; font-size: 12px; font-weight: 700; }
-.wallet-card, .admin-card { background: #0f172a; border: 1px solid #1e293b; padding: 20px; border-radius: 20px; }
-.rate-bar { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); text-align: center; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: bold; margin-bottom: 16px; }
-input { width: 100%; padding: 14px; background: #1e293b; border: 1px solid #334155; color: #fff; border-radius: 12px; margin-bottom: 12px; box-sizing: border-box; }
-input:focus { outline: none; border-color: #0ea5e9; }
-.action-btn-primary { width: 100%; padding: 14px; background: #0ea5e9; color: #0f172a; border: none; font-weight: 700; border-radius: 12px; cursor: pointer; }
-.action-btn-withdraw { width: 100%; padding: 14px; background: transparent; border: 1px solid #334155; color: #fff; font-weight: 600; border-radius: 12px; cursor: pointer; }
-.divider { height: 1px; background: #1e293b; margin: 15px 0; }
-.lock-screen { text-align: center; padding: 40px 20px; background: #0f172a; border-radius: 20px; border: 1px solid rgba(239, 68, 68, 0.2); }
-.lock-icon { font-size: 40px; margin-bottom: 12px; }
-.lock-screen h3 { margin: 0; color: #ef4444; }
-.lock-screen p { color: #94a3b8; font-size: 13px; margin-top: 8px; }
-.admin-review-box { background: #1e293b; border: 1px solid #334155; padding: 16px; border-radius: 14px; margin-bottom: 12px; }
-.review-meta h5 { margin: 0; font-size: 14px; color: #fff; }
-.target-mission { margin: 4px 0 0 0; font-size: 12px; color: #0ea5e9; }
-.proof-string { margin: 6px 0 0 0; font-size: 13px; color: #cbd5e1; background: #0f172a; padding: 8px; border-radius: 8px; }
-.review-actions { display: flex; gap: 8px; margin-top: 12px; }
-.review-actions button { flex: 1; padding: 8px; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; }
-.btn-approve { background: #10b981; color: #fff; }
-.btn-reject { background: #ef4444; color: #fff; }
-.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 1000; }
-.modal-content { background: #0f172a; margin: 25% auto; padding: 24px; width: 85%; max-width: 380px; border-radius: 24px; border: 1px solid #1e293b; position: relative; }
-.close-modal { position: absolute; top: 16px; right: 20px; font-size: 24px; cursor: pointer; color: #94a3b8; }
-.modal-badge { display: inline-block; background: rgba(14, 165, 233, 0.1); color: #0ea5e9; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-bottom: 8px; }
-.modal-content h3 { margin: 0 0 6px 0; color: #fff; }
-.modal-hint { margin: 0 0 20px 0; font-size: 13px; color: #94a3b8; }
-.launch-link { background: #fff !important; color: #0f172a !important; margin-bottom: 20px; }
-.upload-box { border: 2px dashed #334155; padding: 16px; text-align: center; border-radius: 12px; margin: 12px 0; cursor: pointer; color: #94a3b8; font-size: 13px; }
-.proof-form h4 { margin: 0; font-size: 14px; color: #fff; }
+.nav-item.active {
+    color: #38bdf8;
+}
+
+.nav-icon {
+    font-size: 20px;
+}
+
+.nav-text {
+    font-size: 11px;
+}
+
+/* লক স্ক্রিন ও পপআপ */
+.lock-screen {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.lock-icon {
+    font-size: 45px;
+    margin-bottom: 15px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.85);
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    padding: 25px;
+    margin-top: 10%;
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 24px;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.modal-badge {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+.modal-hint {
+    font-size: 13px;
+    color: #94a3b8;
+    margin: 10px 0 15px;
+}
+
+.proof-form {
+    border-top: 1px solid #334155;
+    margin-top: 20px;
+    padding-top: 15px;
+}
+
+.proof-form h4 {
+    font-size: 14px;
+    margin-bottom: 12px;
+    color: #f1f5f9;
+}
+
+.upload-box {
+    border: 2px dashed #334155;
+    padding: 15px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 15px;
+    background: #0f172a;
+}
+
+.upload-box p {
+    font-size: 13px;
+    color: #94a3b8;
+}
